@@ -1,0 +1,46 @@
+{
+  "tag": "iter1_baseline",
+  "n_sentences": 200,
+  "n_tokens": 3194,
+  "vocab_size": 1168,
+  "train_perplexity": 7.181,
+  "n_candidate_words": 30,
+  "n_pairs_above_threshold": 1,
+  "top_pairs": [
+    {
+      "word1": "First",
+      "word2": "first",
+      "score": 1.0
+    }
+  ],
+  "embedding_words": [
+    "First",
+    "first"
+  ],
+  "embedding_method": "random",
+  "embedding_dim": 16,
+  "top_cosine": [
+    {
+      "word1": "First",
+      "word2": "first",
+      "cosine": 0.5526
+    }
+  ],
+  "config": {
+    "max_sentences": 200,
+    "max_chars": 20000,
+    "lowercase": false,
+    "min_freq": 1,
+    "use_nltk_word_tokenize": false,
+    "smoothing_k": 0.0,
+    "max_vocab_for_similarity": 30,
+    "similarity_threshold": 0.5,
+    "similarity_metric": "path",
+    "top_k_pairs": 20,
+    "top_k_embed": 5,
+    "embedding_dim": 16,
+    "embedding_window": 1,
+    "random_seed": 42,
+    "tag": "iter1_baseline"
+  }
+}

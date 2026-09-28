@@ -1,0 +1,94 @@
+{
+  "tag": "iter5_final",
+  "n_sentences": 200,
+  "n_tokens": 3272,
+  "vocab_size": 339,
+  "train_perplexity": 107.553,
+  "n_candidate_words": 80,
+  "n_pairs_above_threshold": 110,
+  "top_pairs": [
+    {
+      "word1": "done",
+      "word2": "made",
+      "score": 1.0
+    },
+    {
+      "word1": "man",
+      "word2": "sir",
+      "score": 0.9474
+    },
+    {
+      "word1": "city",
+      "word2": "rome",
+      "score": 0.9
+    },
+    {
+      "word1": "like",
+      "word2": "make",
+      "score": 0.9
+    },
+    {
+      "word1": "people",
+      "word2": "poor",
+      "score": 0.8889
+    }
+  ],
+  "embedding_words": [
+    "done",
+    "made",
+    "man",
+    "sir",
+    "city",
+    "rome",
+    "like",
+    "make",
+    "people",
+    "poor"
+  ],
+  "embedding_method": "cooccurrence",
+  "embedding_dim": 50,
+  "top_cosine": [
+    {
+      "word1": "sir",
+      "word2": "like",
+      "cosine": 0.8372
+    },
+    {
+      "word1": "man",
+      "word2": "like",
+      "cosine": 0.7394
+    },
+    {
+      "word1": "done",
+      "word2": "like",
+      "cosine": 0.7043
+    },
+    {
+      "word1": "done",
+      "word2": "man",
+      "cosine": 0.6882
+    },
+    {
+      "word1": "made",
+      "word2": "like",
+      "cosine": 0.6508
+    }
+  ],
+  "config": {
+    "max_sentences": 200,
+    "max_chars": 20000,
+    "lowercase": true,
+    "min_freq": 2,
+    "use_nltk_word_tokenize": true,
+    "smoothing_k": 1.0,
+    "max_vocab_for_similarity": 80,
+    "similarity_threshold": 0.5,
+    "similarity_metric": "wup",
+    "top_k_pairs": 20,
+    "top_k_embed": 5,
+    "embedding_dim": 50,
+    "embedding_window": 2,
+    "random_seed": 42,
+    "tag": "iter5_final"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "tag": "iter2_hygiene",
+  "n_sentences": 200,
+  "n_tokens": 3272,
+  "vocab_size": 339,
+  "train_perplexity": 107.553,
+  "n_candidate_words": 50,
+  "n_pairs_above_threshold": 0,
+  "top_pairs": [],
+  "embedding_words": [
+    "first",
+    "citizen",
+    "marcius",
+    "menenius",
+    "good"
+  ],
+  "embedding_method": "random-fallback",
+  "embedding_dim": 32,
+  "top_cosine": [
+    {
+      "word1": "menenius",
+      "word2": "good",
+      "cosine": 0.2096
+    },
+    {
+      "word1": "first",
+      "word2": "menenius",
+      "cosine": 0.1849
+    },
+    {
+      "word1": "marcius",
+      "word2": "good",
+      "cosine": 0.1645
+    },
+    {
+      "word1": "first",
+      "word2": "citizen",
+      "cosine": 0.0998
+    },
+    {
+      "word1": "first",
+      "word2": "good",
+      "cosine": -0.0008
+    }
+  ],
+  "config": {
+    "max_sentences": 200,
+    "max_chars": 20000,
+    "lowercase": true,
+    "min_freq": 2,
+    "use_nltk_word_tokenize": true,
+    "smoothing_k": 1.0,
+    "max_vocab_for_similarity": 50,
+    "similarity_threshold": 0.5,
+    "similarity_metric": "path",
+    "top_k_pairs": 20,
+    "top_k_embed": 5,
+    "embedding_dim": 32,
+    "embedding_window": 2,
+    "random_seed": 42,
+    "tag": "iter2_hygiene"
+  }
+}
