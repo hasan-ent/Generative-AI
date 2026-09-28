@@ -4,7 +4,16 @@
 \documentclass[11pt,a4paper]{article}
 \usepackage[margin=20mm]{geometry}
 \usepackage{booktabs,listings,amsmath,setspace}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,arrows,positioning}
 \usepackage[hidelinks]{hyperref}
+\tikzset{
+  flowblock/.style={rectangle, rounded corners, draw, fill=blue!8,
+    text width=2cm, align=center, font=\scriptsize, minimum height=0.95cm},
+  flowdec/.style={diamond, draw, fill=yellow!18, aspect=1.8,
+    align=center, font=\scriptsize, text width=1.5cm},
+  flowarrow/.style={thick, ->, >=stealth}
+}
 \setstretch{1.12}
 \setlength{\parskip}{4pt}\setlength{\parindent}{0pt}
 \lstset{basicstyle=\small\ttfamily,frame=single,aboveskip=4pt,belowskip=4pt,
@@ -16,6 +25,25 @@
 Karpathy tiny-Shakespeare (GitHub) \textbar\ 20k chars \textbar\ 200 sents \textbar\ 3272 toks \textbar\ V=339}
 \end{center}
 \hrule\vspace{4pt}
+
+\begin{center}
+\begin{tikzpicture}[node distance=4mm and 4mm]
+\node[flowblock] (d) {GitHub\\\tiny-Shakespeare\\\scriptsize 200 sents};
+\node[flowblock, right=of d] (s) {Sentence\\split\\\scriptsize punkt};
+\node[flowblock, right=of s] (t) {Word tok.+IDs\\\scriptsize CSV};
+\node[flowblock, right=of t] (l) {Bigram LM\\\scriptsize PPL 107.55};
+\node[flowblock, right=of l] (w) {WordNet all-pairs\\\scriptsize wup};
+\node[flowdec, right=of w] (f) {$>0.5$?\\\scriptsize 110};
+\node[flowblock, right=of f] (e) {Top-5 embed 50-d\\\scriptsize cos};
+\draw[flowarrow] (d) -- (s);
+\draw[flowarrow] (s) -- (t);
+\draw[flowarrow] (t) -- (l);
+\draw[flowarrow] (l) -- (w);
+\draw[flowarrow] (w) -- (f);
+\draw[flowarrow] (f) -- (e);
+\end{tikzpicture}
+\\{\scriptsize Flow: dataset $\to$ sentences $\to$ tokens/IDs $\to$ LM $\to$ WordNet $\to$ threshold $\to$ embeddings.}
+\end{center}
 
 \textbf{1. Dataset: download + sentence split}
 \begin{lstlisting}
