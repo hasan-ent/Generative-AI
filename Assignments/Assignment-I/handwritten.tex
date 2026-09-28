@@ -1,0 +1,56 @@
+% Handwritten copy — copy exactly this by hand (group of 2, hard copy).
+% Only highly relevant code. Compile: pdflatex handwritten.tex -> handwritten.pdf
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=22mm]{geometry}
+\usepackage{booktabs,listings,amsmath,setspace}
+\usepackage[hidelinks]{hyperref}
+\setstretch{1.15}
+\setlength{\parskip}{5pt}\setlength{\parindent}{0pt}
+\lstset{basicstyle=\small\ttfamily,frame=single,aboveskip=4pt,belowskip=4pt,
+  columns=fullflexible,keepspaces=true}
+\begin{document}
+\begin{center}
+{\Large Assignment--1: Shakespeare $\to$ LM $\to$ WordNet $\to$ Embeddings}\\[2pt]
+{\small Group: \underline{\hspace{3.5cm}}\quad \underline{\hspace{3.5cm}} \quad
+Tiny-Shakespeare (GitHub) \textbar\ 200 sents \textbar\ 3272 toks \textbar\ V=339}
+\end{center}
+\hrule\vspace{4pt}
+
+\textbf{1. Tokenize $\to$ IDs ($\to$ \texttt{token\_ids.csv})}
+\begin{lstlisting}
+toks = word_tokenize(sent.lower())          # NLTK, keep A-Z only
+tok.build_vocab(tokenized)                  # min_freq=2, <pad>=0, <unk>=1
+ids = tok.encode(toks)                      # e.g. [hear,me,speak] -> [43,1,93]
+\end{lstlisting}
+
+\textbf{2. Bigram language model ($\to$ \texttt{language\_model.json})}
+\begin{lstlisting}
+P(w | prev) = (C(prev, w) + 1) / (C(prev) + V)   # add-1, V = 339
+PPL = exp(-mean(log P))                          # train PPL = 107.55
+\end{lstlisting}
+
+\textbf{3. WordNet similarity, keep $>0.5$ ($\to$ \texttt{wordnet\_similarity.csv})}
+\begin{lstlisting}
+from nltk.corpus import wordnet as wn
+from itertools import combinations          # top-80 content words, no stopwords
+s = wn.synsets(a)[0].wup_similarity(wn.synsets(b)[0])  # path ~0 pairs!
+kept = [(a, b, s) for a, b in combinations(words, 2) if s and s > 0.5]
+\end{lstlisting}
+110 pairs $>0.5$. Top:
+\begin{center}\begin{tabular}{lll}\toprule w1 & w2 & wup \\\midrule
+done & made & 1.000 \\ man & sir & 0.947 \\ city & rome & 0.900 \\
+like & make & 0.900 \\ people & poor & 0.889 \\\bottomrule\end{tabular}\end{center}
+
+\textbf{4. Top-5 embedding ($\to$ \texttt{top5\_embeddings.csv})}
+\begin{lstlisting}
+# window-2 co-occurrence on same corpus, L2-norm -> 50-d (seed 42)
+mat[i, j] += 1  for neighbours in window     # 5 pairs -> 10 words
+cos(a, b) = a.b / (||a|| * ||b||)            # e.g. sir-like 0.837
+\end{lstlisting}
+
+\textbf{5. Iterations.} 1 baseline (whitespace, $k{=}0$, path: 1 pair)
+$\to$ 2 hygiene (NLTK+lower, $k{=}1$: 0 pairs)
+$\to$ 3 \textbf{path$\to$wup} (0$\to$110)
+$\to$ 4 random$\to$co-occurrence
+$\to$ 5 freeze + plot. Run: \texttt{make run} (venv only).
+\end{document}
