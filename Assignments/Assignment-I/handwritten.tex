@@ -1,56 +1,90 @@
-% Handwritten copy — copy exactly this by hand (group of 2, hard copy).
-% Only highly relevant code. Compile: pdflatex handwritten.tex -> handwritten.pdf
+% Handwritten copy — copy by hand (group of 2, hard copy).
+% Full-aspect version: dataset + tokenize + LM + WordNet + embeddings + results.
+% Compile: pdflatex handwritten.tex -> handwritten.pdf
 \documentclass[11pt,a4paper]{article}
-\usepackage[margin=22mm]{geometry}
+\usepackage[margin=20mm]{geometry}
 \usepackage{booktabs,listings,amsmath,setspace}
 \usepackage[hidelinks]{hyperref}
-\setstretch{1.15}
-\setlength{\parskip}{5pt}\setlength{\parindent}{0pt}
+\setstretch{1.12}
+\setlength{\parskip}{4pt}\setlength{\parindent}{0pt}
 \lstset{basicstyle=\small\ttfamily,frame=single,aboveskip=4pt,belowskip=4pt,
   columns=fullflexible,keepspaces=true}
 \begin{document}
 \begin{center}
 {\Large Assignment--1: Shakespeare $\to$ LM $\to$ WordNet $\to$ Embeddings}\\[2pt]
 {\small Group: \underline{\hspace{3.5cm}}\quad \underline{\hspace{3.5cm}} \quad
-Tiny-Shakespeare (GitHub) \textbar\ 200 sents \textbar\ 3272 toks \textbar\ V=339}
+Karpathy tiny-Shakespeare (GitHub) \textbar\ 20k chars \textbar\ 200 sents \textbar\ 3272 toks \textbar\ V=339}
 \end{center}
 \hrule\vspace{4pt}
 
-\textbf{1. Tokenize $\to$ IDs ($\to$ \texttt{token\_ids.csv})}
+\textbf{1. Dataset: download + sentence split}
 \begin{lstlisting}
-toks = word_tokenize(sent.lower())          # NLTK, keep A-Z only
-tok.build_vocab(tokenized)                  # min_freq=2, <pad>=0, <unk>=1
-ids = tok.encode(toks)                      # e.g. [hear,me,speak] -> [43,1,93]
+urllib.request.urlretrieve(URL, "data/tinyshakespeare.txt")
+sents = sent_tokenize(open(...).read()[:20000])[:200]  # NLTK punkt
 \end{lstlisting}
 
-\textbf{2. Bigram language model ($\to$ \texttt{language\_model.json})}
+\textbf{2. Tokenize $\to$ vocab $\to$ IDs ($\to$ \texttt{token\_ids.csv})}
 \begin{lstlisting}
-P(w | prev) = (C(prev, w) + 1) / (C(prev) + V)   # add-1, V = 339
-PPL = exp(-mean(log P))                          # train PPL = 107.55
+from nltk.tokenize import word_tokenize
+toks = word_tokenize(sent.lower())              # keep tokens with [A-Za-z]
+tok.build_vocab(tokenized)                      # count, drop freq<2
+# word2id = {<pad>:0, <unk>:1, the:2, you:3, ...}  (339 types)
+ids = [tok.word2id.get(t, 1) for t in toks]     # e.g. [hear,me,speak]->[43,1,93]
+# CSV row: sentence_id, sentence, "toks...", "ids...", length
 \end{lstlisting}
 
-\textbf{3. WordNet similarity, keep $>0.5$ ($\to$ \texttt{wordnet\_similarity.csv})}
+\textbf{3. Bigram LM with add-1 ($\to$ \texttt{language\_model.json})}
+\begin{lstlisting}
+for sent in tokenized:                          # OOV already mapped to <unk>
+    for i, w in enumerate(sent):
+        unigram[w] += 1
+        if i > 0: bigram[(sent[i-1], w)] += 1
+P(w | prev) = (C(prev, w) + 1) / (C(prev) + V)  # V = 339
+PPL = exp(-mean(log P))                         # train PPL = 107.55
+\end{lstlisting}
+
+\textbf{4. WordNet all-pairs similarity, keep $>0.5$ ($\to$ \texttt{wordnet\_similarity.csv})}
 \begin{lstlisting}
 from nltk.corpus import wordnet as wn
-from itertools import combinations          # top-80 content words, no stopwords
-s = wn.synsets(a)[0].wup_similarity(wn.synsets(b)[0])  # path ~0 pairs!
-kept = [(a, b, s) for a, b in combinations(words, 2) if s and s > 0.5]
+from itertools import combinations
+# candidates: top-80 frequent, alpha, len>2, no stopwords
+syn = lambda w: wn.synsets(w.lower())
+def score(a, b):                                # first synset = frequent sense
+    A, B = syn(a), syn(b)
+    return A[0].wup_similarity(B[0]) if A and B else None  # path gives ~0!
+kept = [(a, b, round(s, 4)) for a, b in combinations(words, 2)
+        if (s := score(a, b)) and s > 0.5]      # 110 pairs, sort desc
 \end{lstlisting}
-110 pairs $>0.5$. Top:
-\begin{center}\begin{tabular}{lll}\toprule w1 & w2 & wup \\\midrule
-done & made & 1.000 \\ man & sir & 0.947 \\ city & rome & 0.900 \\
-like & make & 0.900 \\ people & poor & 0.889 \\\bottomrule\end{tabular}\end{center}
 
-\textbf{4. Top-5 embedding ($\to$ \texttt{top5\_embeddings.csv})}
+\textbf{5. Top-5 pairs $\to$ co-occurrence embeddings ($\to$ \texttt{top5\_embeddings.csv})}
 \begin{lstlisting}
-# window-2 co-occurrence on same corpus, L2-norm -> 50-d (seed 42)
-mat[i, j] += 1  for neighbours in window     # 5 pairs -> 10 words
-cos(a, b) = a.b / (||a|| * ||b||)            # e.g. sir-like 0.837
+targets = unique(words of top-5 pairs)  # 10 words: done,made,man,sir,...
+for sent in tokenized:                          # window = 2, symmetric
+    f = [t for t in sent if t in targets]
+    for i, w in enumerate(f):
+        for j in range(max(0,i-2), min(len(f),i+3)):
+            if i != j: mat[w, f[j]] += 1
+emb = mat / ||mat||                             # L2 rows -> project to 50-d
+cos(a, b) = a.b / (||a|| * ||b||)               # e.g. sir-like 0.837
 \end{lstlisting}
 
-\textbf{5. Iterations.} 1 baseline (whitespace, $k{=}0$, path: 1 pair)
-$\to$ 2 hygiene (NLTK+lower, $k{=}1$: 0 pairs)
-$\to$ 3 \textbf{path$\to$wup} (0$\to$110)
-$\to$ 4 random$\to$co-occurrence
-$\to$ 5 freeze + plot. Run: \texttt{make run} (venv only).
+\textbf{6. Results (final \texttt{iter5\_final})}
+\begin{center}
+\begin{tabular}{lll}\toprule w1 & w2 & wup \\\midrule
+done & made & 1.000 \\ man & sir & 0.947 \\ city & rome & 0.900 \\
+like & make & 0.900 \\ people & poor & 0.889 \\\bottomrule\end{tabular}
+\qquad
+\begin{tabular}{lll}\toprule a & b & cos \\\midrule
+sir & like & 0.837 \\ man & like & 0.739 \\ done & like & 0.704 \\\bottomrule\end{tabular}
+\end{center}
+
+\textbf{7. Five iterations (same 200 sents).}
+\begin{center}\begin{tabular}{cllll}\toprule\# & tag & change & PPL & $>0.5$ \\\midrule
+1 & baseline & whitespace, keep case, $k{=}0$, path, rand-16d & 7.18 & 1 \\
+2 & hygiene & lower+NLTK, min\_freq 2, $k{=}1$, stop-filter & 107.55 & 0 \\
+3 & wordnet & \textbf{path$\to$wup} (0$\to$110 pairs) & 107.55 & 110 \\
+4 & cooccur & random$\to$co-occurrence, window 2, 50-d & 107.55 & 110 \\
+5 & final & freeze + cosine heatmap + stats & 107.55 & 110 \\\bottomrule\end{tabular}\end{center}
+{\small \textbf{Run (venv only):} \texttt{make venv \&\& make install \&\& make test \&\& make run} \quad
+\textbf{Out:} \texttt{token\_ids.csv, vocab.json, language\_model.json, wordnet\_similarity.csv, top5\_embeddings.csv/npy, stats.json}.}
 \end{document}
